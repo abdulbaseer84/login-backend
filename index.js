@@ -25,6 +25,10 @@ async function connectDB() {
 
 connectDB(); 
 
+
+app.get("/",(req,res)=>{
+    res.json("hello");
+})
 app.post("/login",(req,res)=>{
     const {email,password}=req.body;
     EmployeeModel.findOne({email:email})

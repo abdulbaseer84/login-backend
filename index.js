@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
-const EmployeeModel = require("./models/Employee"); // Assuming Employee model is already created
+const EmployeeModel = require("./models/Employee");
 const app = express();
 
 // CORS configuration
@@ -17,7 +17,7 @@ app.use(
 
 app.use(express.json());
 
-// MongoDB connection
+// MongoDB connection with try-catch
 async function connectDB() {
   try {
     const mongoUri = process.env.MONGO_URI || "your-mongo-uri"; // Use environment variable for MongoDB URI
@@ -38,36 +38,32 @@ app.get("/", (req, res) => {
   res.json("Hello, backend is working!");
 });
 
-// Login route
-app.post("/login", (req, res) => {
+// Login route with try-catch
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  EmployeeModel.findOne({ email: email })
-    .then((user) => {
-      if (user) {
-        bcrypt.compare(password, user.password, (err, result) => {
-          if (err) {
-            res.status(500).json({ message: "Error comparing passwords", error: err });
-          } else if (result) {
-            res.json("Success");
-          } else {
-            res.json("The password is incorrect");
-          }
-        });
+  
+  try {
+    const user = await EmployeeModel.findOne({ email: email });
+    if (user) {
+      const result = await bcrypt.compare(password, user.password);
+      if (result) {
+        res.json("Success");
       } else {
-        res.json("No record found for this email");
+        res.json("The password is incorrect");
       }
-    })
-    .catch((err) => {
-      res.status(500).json({ message: "Error during login", error: err });
-    });
+    } else {
+      res.json("No record found for this email");
+    }
+  } catch (err) {
+    res.status(500).json({ message: "Error during login", error: err });
+  }
 });
 
-// Register route (with password hashing)
+// Register route with password hashing and try-catch
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // Hashing the password before saving to database
     const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
 
     const newEmployee = new EmployeeModel({
@@ -76,7 +72,6 @@ app.post("/register", async (req, res) => {
       password: hashedPassword,
     });
 
-    // Saving new employee to database
     await newEmployee.save();
     res.json({ message: "Employee registered successfully", employee: newEmployee });
   } catch (err) {

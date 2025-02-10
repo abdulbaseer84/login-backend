@@ -7,14 +7,15 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: ["https://login-frontend-virid.vercel.app"], // Removed trailing slash
-    methods: ["POST", "GET"],
-    credentials: true
+    origin: ["https://login-frontend-virid.vercel.app"],  // Allow your frontend domain
+    methods: ["POST", "GET", "OPTIONS"],  // Allow POST, GET, and OPTIONS (preflight request)
+    allowedHeaders: ["Content-Type", "Authorization"],  // Allow specific headers
+    credentials: true  // Enable cookies or authentication headers
 }));
 
 app.use(express.json());
 
-// Connect to MongoDB
+// MongoDB connection
 async function connectDB() {
     try {
         await mongoose.connect("mongodb+srv://login:login123@cluster0.izd3s.mongodb.net/login");
@@ -31,13 +32,12 @@ app.get("/", (req, res) => {
     res.json("Hello, backend is working!");
 });
 
-// Login route (with password hashing)
+// Login route
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
     EmployeeModel.findOne({ email: email })
         .then(user => {
             if (user) {
-                // Compare the hashed password stored in the database with the provided password
                 bcrypt.compare(password, user.password, (err, result) => {
                     if (err) {
                         res.status(500).json({ message: "Error comparing passwords", error: err });
@@ -60,7 +60,6 @@ app.post("/login", (req, res) => {
 app.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
 
-    // Hash the password before saving it to the database
     try {
         const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
         const newEmployee = new EmployeeModel({

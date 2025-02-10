@@ -7,7 +7,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: ["https://login-frontend-virid.vercel.app"],  // Allow your frontend domain
+    origin: ["https://login-backend-weld.vercel.app"],  // Allow your frontend domain
     methods: ["POST", "GET", "OPTIONS"],  // Allow POST, GET, and OPTIONS (preflight request)
     allowedHeaders: ["Content-Type", "Authorization"],  // Allow specific headers
     credentials: true  // Enable cookies or authentication headers
